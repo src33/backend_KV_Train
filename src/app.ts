@@ -15,7 +15,6 @@ const server = express();
 server.use(loggerMiddleware);
 server.use(bodyParser.json());
 server.use("/employee", employeeRouter);
-
 server.use(errorMiddleware);
 
 server.get("/", (req: RequestWithUser, res: Response) => {

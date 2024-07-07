@@ -1,10 +1,11 @@
+import { isObject } from "class-validator";
 import { CreateAddressDto } from "../dto/address.dto";
 import Address from "../entity/address.entity";
 import Employee from "../entity/employee.entity";
 import HttpException from "../exceptions/http.exceptions";
 import EmployeeRepository from "../repository/employee.repository";
-import { JWT_SECRET, JWT_VALIDITY } from "../utils/constants";
 import { jwtPayload } from "../utils/jwtPayload";
+import { RequestWithUser } from "../utils/requestWithUser";
 import { Role } from "../utils/role.enum";
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
@@ -26,7 +27,7 @@ class EmployeeService {
                email: employee.email,
                role: employee.role,
             };
-            const token = jsonwebtoken.sign(payload, JWT_SECRET, { expiresIn: JWT_VALIDITY });
+            const token = jsonwebtoken.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_VALIDITY });
             return token;
          }
       }
@@ -65,14 +66,14 @@ class EmployeeService {
       name: string,
       age: number,
       address: CreateAddressDto,
-      password: string,
+      // password: string,
       role: Role
    ) => {
       const employee = await this.employeeRepository.findOneBy({ id: id });
       employee.email = email;
       employee.name = name;
       employee.age = age;
-      employee.password = password;
+      // employee.password = password;
       employee.role = role;
 
       // const employee_address = new Address();
@@ -84,6 +85,23 @@ class EmployeeService {
    };
    deleteEmployee = async (id: number) => {
       return this.employeeRepository.delete(id);
+   };
+   partialUpdateEmployee = async (id: number, req: Object) => {
+      const employee = await this.employeeRepository.findOneBy({ id: id });
+      Object.keys(req).forEach((field) => {
+         if (employee.hasOwnProperty(field)) {
+            if (isObject(req[field])) {
+               Object.keys(req[field]).forEach((sub_field) => {
+                  if (employee[field].hasOwnProperty(sub_field)) {
+                     employee[field][sub_field] = req[field][sub_field];
+                  }
+               });
+            } else {
+               employee[field] = req[field];
+            }
+         }
+      });
+      return this.employeeRepository.save(employee);
    };
    softRemove = async (delete_employee: Employee) => {
       // const delete_employee = await this.employeeRepository.findOneBy({ id: id });

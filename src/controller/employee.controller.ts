@@ -1,4 +1,4 @@
-import { plainToClass, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import HttpException from "../exceptions/http.exceptions";
 import EmployeeService from "../service/employee.service";
 import express from "express";
@@ -7,6 +7,7 @@ import { validate } from "class-validator";
 import { error } from "console";
 import { RequestWithUser } from "../utils/requestWithUser";
 import authorize from "../middleware/authorize.middleware";
+import { UpdateEmployeeDto } from "../dto/update.dto";
 
 class EmployeeController {
    public router: express.Router;
@@ -19,9 +20,11 @@ class EmployeeController {
       this.router.post("/", authorize, this.createEmployee);
       this.router.put("/:id", this.updateEmployee);
       this.router.delete("/:id", this.deleteEmployee);
+      this.router.patch("/:id", this.partialUpdateEmployee);
    }
    public login = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
       try {
+         //Error handling
          const token = await this.employeeService.login(req.body.email, req.body.password);
          res.status(200).send(token);
       } catch (err) {
@@ -34,8 +37,10 @@ class EmployeeController {
    };
    public getEmployeeById = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
       try {
+         //Error handling
          const employee_id = req.params.id;
          if (!Number(employee_id)) {
+            //validation
             const error = new HttpException(404, "Invalid Request");
             throw error;
          } else {
@@ -52,18 +57,20 @@ class EmployeeController {
       }
    };
    private createEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
-      //----------email validation---------
       try {
+         //Error handling
          if (req.role != "HR") {
             console.log("if");
             throw new HttpException(403, "Not Authorized");
          } else {
             const employee_dto = plainToInstance(CreateEmployeeDto, req.body);
-            const errors = await validate(employee_dto);
+            const errors = await validate(employee_dto); //validation
 
             if (errors.length) {
                console.log(JSON.stringify(errors));
-               throw new HttpException(400, JSON.stringify(errors));
+
+               const formattedErrors = await this.extractValidationErrors(errors);
+               throw new HttpException(400, JSON.stringify(formattedErrors));
             }
             const new_employee = await this.employeeService.createEmployee(
                employee_dto.email,
@@ -81,17 +88,19 @@ class EmployeeController {
    };
    private updateEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
       try {
+         //Error handling
          const employee_id = req.params.id;
          if (!Number(employee_id)) {
             const error = new HttpException(404, "Invalid Request");
             throw error;
          } else {
-            const employee_dto = plainToInstance(CreateEmployeeDto, req.body);
-            const errors = await validate(employee_dto);
+            const employee_dto = plainToInstance(UpdateEmployeeDto, req.body);
+            const errors = await validate(employee_dto); //validation
 
             if (errors.length) {
                console.log(errors);
-               throw new HttpException(400, JSON.stringify(errors[1]));
+               const formattedErrors = await this.extractValidationErrors(errors);
+               throw new HttpException(400, JSON.stringify(formattedErrors));
             }
             const updated_employee = await this.employeeService.updateEmployee(
                Number(employee_id),
@@ -99,7 +108,7 @@ class EmployeeController {
                employee_dto.name,
                employee_dto.age,
                employee_dto.address,
-               employee_dto.password,
+               // employee_dto.password,
                employee_dto.role
             );
             res.status(201).send(updated_employee);
@@ -108,11 +117,27 @@ class EmployeeController {
          next(err);
       }
    };
-   private deleteEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
+
+   private partialUpdateEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
       try {
          const employee_id = req.params.id;
          if (!Number(employee_id)) {
-            const error = new HttpException(404, "Invalid Request");
+            const error = new HttpException(404, "Invalid Request"); //validation
+            throw error;
+         } else {
+            const partial_updated_employee = await this.employeeService.partialUpdateEmployee(Number(employee_id), req.body);
+            res.status(201).send(partial_updated_employee);
+         }
+      } catch (err) {
+         next(err);
+      }
+   };
+   private deleteEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
+      try {
+         //Error handling
+         const employee_id = req.params.id;
+         if (!Number(employee_id)) {
+            const error = new HttpException(404, "Invalid Request"); //validation
             throw error;
          } else {
             const employeeWithId = await this.employeeService.getEmployeeById(Number(employee_id));
@@ -129,35 +154,16 @@ class EmployeeController {
          next(err);
       }
    };
+
+   extractValidationErrors = (errorResponse: any): string[] => {
+      const errorMessages = errorResponse.map((error: any) => {
+         if (error.constraints) {
+            return Object.values(error.constraints);
+         } else if (error.children && error.children.length) {
+            return this.extractValidationErrors(error.children);
+         }
+      });
+      return errorMessages.flat();
+   };
 }
 export default EmployeeController;
-// try {
-//   const employee_dto = plainToInstance(CreateEmployeeDto, req.body);
-//   const errors = await validate(employee_dto);
-
-//   if (errors.length) {
-//     // Transform errors into the desired format
-//     const formattedErrors = {
-//       error: "Validation Failed",
-//       statusCode: 400,
-//       errors: []
-//     };
-
-//     errors.forEach(error => {
-//       if (error.constraints && error.constraints.isNumber) {
-//         // Use the constraint message if available
-//         formattedErrors.errors.push(error.constraints.isNumber);
-//       } else {
-//         // Fallback to a generic message if no specific constraint message found
-//         formattedErrors.errors.push(`Validation error for ${error.property}`);
-//       }
-//     });
-
-//     // Throw the formatted error as an HttpException
-//     throw new HttpException(400, JSON.stringify(formattedErrors));
-//   }
-
-//   // Proceed with normal flow if no errors
-// } catch (error) {
-//   // Handle or propagate the error as needed
-// }
