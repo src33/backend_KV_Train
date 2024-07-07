@@ -1,20 +1,20 @@
 import express from "express";
 import { Request, Response } from "express";
-import employeeRouter from "./routes/empoylee.Routes";
+import employeeRouter from "./routes/employee.Routes";
 import loggerMiddleware from "./middleware/logger.middleware";
 import bodyParser from "body-parser";
 import dataSource from "./db/data-source.db";
-import HttpException from "./exceptions/http.exceptions";
 import { error } from "console";
 import errorMiddleware from "./middleware/error.middleware";
-import authorize from "./middleware/authorize.middleware";
 import { RequestWithUser } from "./utils/requestWithUser";
+import departmentRouter from "./routes/department.routes";
 
 const server = express();
 
 server.use(loggerMiddleware);
 server.use(bodyParser.json());
 server.use("/employee", employeeRouter);
+server.use("/department", departmentRouter);
 server.use(errorMiddleware);
 
 server.get("/", (req: RequestWithUser, res: Response) => {

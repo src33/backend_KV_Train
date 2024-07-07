@@ -24,8 +24,9 @@ class Employee extends AbstractEntity {
    @Column({ nullable: true })
    password: string;
 
-   @ManyToOne(() => Department, (Department) => Department.employee, {})
-   department: Department;
+   @ManyToOne(() => Department, (Department) => Department.employee, { cascade: true, onDelete: "CASCADE" })
+   // @JoinColumn({ referencedColumnName: "name" })
+   department: number;
 
    @Column({ nullable: true })
    role: Role;

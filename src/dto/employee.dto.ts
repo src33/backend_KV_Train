@@ -1,41 +1,38 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-  ValidateNested,
-} from "class-validator";
+import { IsEmail, IsEnum, isNotEmpty, IsNotEmpty, IsNumber, IsString, ValidateNested } from "class-validator";
 import Address from "../entity/address.entity";
 import { Type } from "class-transformer";
 import { CreateAddressDto } from "./address.dto";
 import "reflect-metadata";
 import { Role } from "../utils/role.enum";
+import { CreateDepartmentDto } from "./department.dto";
 export class CreateEmployeeDto {
-  @IsNotEmpty()
-  @IsString()
-  name: string;
+   @IsNotEmpty()
+   @IsString()
+   name: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  @IsString()
-  email: string;
+   @IsEmail()
+   @IsNotEmpty()
+   @IsString()
+   email: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  age: number;
+   @IsNotEmpty()
+   @IsNumber()
+   age: number;
 
-  @IsNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => CreateAddressDto)
-  address: CreateAddressDto;
+   @IsNotEmpty()
+   @ValidateNested({ each: true })
+   @Type(() => CreateAddressDto)
+   address: CreateAddressDto;
 
-  @IsNotEmpty()
-  @IsString()
-  password: string;
+   @IsNotEmpty()
+   @IsString()
+   password: string;
 
-  
-  @IsNotEmpty()
-  @IsEnum(Role)
-  role: Role;
+   @IsNotEmpty()
+   @IsNumber()
+   department_id: number;
+
+   @IsNotEmpty()
+   @IsEnum(Role)
+   role: Role;
 }

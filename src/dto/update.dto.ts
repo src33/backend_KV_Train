@@ -26,4 +26,8 @@ export class UpdateEmployeeDto {
    @IsNotEmpty()
    @IsEnum(Role)
    role: Role;
+
+   @IsNotEmpty()
+   @IsNumber()
+   department_id: number;
 }

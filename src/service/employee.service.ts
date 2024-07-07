@@ -9,6 +9,7 @@ import { RequestWithUser } from "../utils/requestWithUser";
 import { Role } from "../utils/role.enum";
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
+import { CreateDepartmentDto } from "../dto/department.dto";
 
 class EmployeeService {
    constructor(private employeeRepository: EmployeeRepository) {
@@ -44,7 +45,8 @@ class EmployeeService {
       age: number,
       address: CreateAddressDto,
       password: string,
-      role: Role
+      role: Role,
+      department_id: number
    ) => {
       const new_employee = new Employee();
       new_employee.email = email;
@@ -52,6 +54,7 @@ class EmployeeService {
       new_employee.age = age;
       new_employee.password = password ? await bcrypt.hash(password, 10) : "";
       new_employee.role = role;
+      new_employee.department = department_id;
 
       const new_employee_address = new Address();
       new_employee_address.line1 = address.line1;
@@ -67,7 +70,8 @@ class EmployeeService {
       age: number,
       address: CreateAddressDto,
       // password: string,
-      role: Role
+      role: Role,
+      department_id: number
    ) => {
       const employee = await this.employeeRepository.findOneBy({ id: id });
       employee.email = email;
@@ -75,7 +79,7 @@ class EmployeeService {
       employee.age = age;
       // employee.password = password;
       employee.role = role;
-
+      employee.department = department_id;
       // const employee_address = new Address();
       employee.address.line1 = address.line1;
       employee.address.pincode = address.pincode;

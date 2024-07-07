@@ -78,7 +78,8 @@ class EmployeeController {
                employee_dto.age,
                employee_dto.address,
                employee_dto.password,
-               employee_dto.role
+               employee_dto.role,
+               employee_dto.department_id
             );
             res.status(201).send(new_employee);
          }
@@ -109,7 +110,8 @@ class EmployeeController {
                employee_dto.age,
                employee_dto.address,
                // employee_dto.password,
-               employee_dto.role
+               employee_dto.role,
+               employee_dto.department_id
             );
             res.status(201).send(updated_employee);
          }
