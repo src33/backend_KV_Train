@@ -1,22 +1,13 @@
 import {
-  Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
-@Entity()
-class Employee {
-  @PrimaryColumn()
+class AbstractEntity {
+  @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  name: string;
-
-  @Column()
-  email: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -27,4 +18,5 @@ class Employee {
   @DeleteDateColumn()
   deletedAt: Date;
 }
-export default Employee;
+
+export default AbstractEntity;

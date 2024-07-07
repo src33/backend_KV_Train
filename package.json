@@ -1,29 +1,54 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "intro": "echo 'Hello KeyValue !! I am Sanoj Ramachandran :)\n'",
-    "start_server": "node dist/app.js",
-    "build": "rm -rf dist/ && tsc",
-    "exec": "npm run build && npm run start_server"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "body-parser": "^1.20.2",
-    "express": "^4.19.2",
-    "pg": "^8.12.0",
-    "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.20",
-    "typeorm-naming-strategies": "^4.1.0"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.14.9",
-    "typescript": "^5.5.3"
-  }
+   "name": "backend",
+   "version": "1.0.0",
+   "main": "app.js",
+   "scripts": {
+      "test": "jest",
+      "test-coverage": "jest --coverage",
+      "intro": "echo 'Hello KeyValue !! I am Sanoj Ramachandran :)\n'",
+      "start_server": "node dist/src/app.js",
+      "build": "rm -rf dist/ && tsc",
+      "exec": "npm run build && npm run start_server",
+      "migration:create": "npm run build && npx typeorm migration:create",
+      "migration:generate": "npm run build && npx typeorm migration:generate -d dist/src/db/data-source.db.js",
+      "migration:run": "npm run build && npx typeorm migration:run -d dist/src/db/data-source.db.js",
+      "migration:revert": "npm run build && npx typeorm migration:revert -d dist/src/db/data-source.db.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+   "description": "",
+   "dependencies": {
+      "bcrypt": "^5.1.1",
+      "body-parser": "^1.20.2",
+      "class-transformer": "^0.5.1",
+      "class-validator": "^0.14.1",
+      "dotenv": "^16.4.5",
+      "express": "^4.19.2",
+      "jsonwebtoken": "^9.0.2",
+      "pg": "^8.12.0",
+      "reflect-metadata": "^0.2.2",
+      "typeorm": "^0.3.20",
+      "typeorm-naming-strategies": "^4.1.0"
+   },
+   "devDependencies": {
+      "@types/bcrypt": "^5.0.2",
+      "@types/express": "^4.17.21",
+      "@types/jest": "^29.5.12",
+      "@types/jest-when": "^3.5.5",
+      "@types/node": "^20.14.9",
+      "jest-when": "^3.6.0",
+      "ts-jest": "^29.1.5",
+      "typescript": "^5.5.3"
+   },
+   "jest": {
+      "transform": {
+         "^.+\\.(t)s$": "ts-jest"
+      },
+      "verbose": true,
+      "collectCoverageFrom": [
+         "<rootDir>/src/**/*.ts",
+         "!**/index.ts"
+      ]
+   }
 }
