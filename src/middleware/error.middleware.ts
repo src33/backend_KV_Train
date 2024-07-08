@@ -6,8 +6,10 @@ const errorMiddleware = (error: Error, req: Request, res: Response, next: NextFu
    try {
       if (error instanceof HttpException) {
          const status: number = error.status || 500;
-         const message: string = error.message || "Something went wrong";
-         let respbody = { stausCode: status, errors: JSON.parse(message) };
+         const message: string = isJsonString(error.message)
+            ? JSON.parse(error.message)
+            : error.message || "Something went wrong";
+         let respbody = { error: "Validation Failed", stausCode: status, errors: message };
          res.status(status).json(respbody);
       } else {
          console.error(error.stack);
@@ -17,5 +19,13 @@ const errorMiddleware = (error: Error, req: Request, res: Response, next: NextFu
       next(error);
    }
 };
-
 export default errorMiddleware;
+
+function isJsonString(message: string) {
+   try {
+      JSON.parse(message);
+   } catch (e) {
+      return false;
+   }
+   return true;
+}

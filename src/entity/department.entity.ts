@@ -8,6 +8,6 @@ class Department extends AbstractEntity {
    name: string;
 
    @OneToMany(() => Employee, (employee) => employee.department, {})
-   employee: Employee;
+   employee: Employee[];
 }
 export default Department;

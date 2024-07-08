@@ -1,11 +1,8 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
 import "reflect-metadata";
+import { DepartmentList } from "../utils/department.enum";
 export class CreateDepartmentDto {
    @IsNotEmpty()
-   @IsNumber()
-   id: number;
-
-   //    @IsNotEmpty()
-   //    @IsString()
-   //    name: string;
+   @IsEnum(DepartmentList)
+   name: DepartmentList;
 }

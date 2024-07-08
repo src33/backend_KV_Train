@@ -29,8 +29,9 @@ export class CreateEmployeeDto {
    password: string;
 
    @IsNotEmpty()
-   @IsNumber()
-   department_id: number;
+   @ValidateNested({ each: true })
+   @Type(() => CreateDepartmentDto)
+   department: CreateDepartmentDto;
 
    @IsNotEmpty()
    @IsEnum(Role)

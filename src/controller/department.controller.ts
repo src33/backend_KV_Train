@@ -4,8 +4,10 @@ import DepartmentService from "../service/department.service";
 import { Request, Response } from "express";
 import authorize from "../middleware/authorize.middleware";
 import HttpException from "../exceptions/http.exceptions";
-import { isString } from "class-validator";
+import { isString, validate } from "class-validator";
 import { RequestWithUser } from "../utils/requestWithUser";
+import { plainToInstance } from "class-transformer";
+import { CreateDepartmentDto } from "../dto/department.dto";
 
 class DepartmentController {
    public router: express.Router;
@@ -15,7 +17,8 @@ class DepartmentController {
       this.router = express.Router();
 
       this.router.get("/", this.getAllDepartments);
-      this.router.get("/:id", this.getDepartmentById);
+      // this.router.get("/:id", this.getDepartmentById);
+      this.router.get("/:name", this.getEmployeesByDepartment);
       this.router.post("/", authorize, this.createDepartment);
       this.router.put("/:id", this.updateDepartment);
       this.router.delete("/:id", authorize, this.deleteDepartment);
@@ -29,7 +32,7 @@ class DepartmentController {
    public getDepartmentById = async (req: Request, res: express.Response, next: express.NextFunction) => {
       try {
          //Error handling
-         const department_id = req.params.id;
+         const department_id = req.params.name;
          if (!Number(department_id)) {
             //validation
             const error = new HttpException(404, "Invalid Request");
@@ -55,7 +58,16 @@ class DepartmentController {
             console.log("if");
             throw new HttpException(403, "Not Authorized");
          } else {
-            const department = await this.departmentService.createDepartment(req.body.name);
+            const department_dto = plainToInstance(CreateDepartmentDto, req.body);
+            const errors = await validate(department_dto); //validation
+
+            if (errors.length) {
+               console.log(JSON.stringify(errors));
+
+               const formattedErrors = await this.extractValidationErrors(errors);
+               throw new HttpException(400, JSON.stringify(formattedErrors));
+            }
+            const department = await this.departmentService.createDepartment(department_dto.name);
             res.status(200).send(department);
          }
       } catch (err) {
@@ -98,20 +110,57 @@ class DepartmentController {
                const error = new HttpException(404, "Invalid Request"); //validation
                throw error;
             } else {
-               const departmentWithId = await this.departmentService.getDepartmentById(Number(department_id));
+               const departmentWithId = await this.departmentService.getDepartmentEmployees(Number(department_id));
                if (!departmentWithId) {
-                  // console.log("entered IF");
-                  const error = new HttpException(404, "department Not Found");
+                  console.log("entered IF");
+                  const error = new HttpException(404, "Department Not Found");
                   throw error;
                } else {
-                  await this.departmentService.softRemove(departmentWithId);
-                  res.status(200).send(departmentWithId);
+                  console.log(departmentWithId.employee);
+                  // console.log(active_employee);
+                  console.log("-------------------------------");
+                  if (departmentWithId.employee.length > 0) {
+                     throw new HttpException(404, "Department has active employees");
+                  } else {
+                     await this.departmentService.softRemove(departmentWithId);
+                     res.status(200).send(departmentWithId);
+                  }
                }
             }
          }
       } catch (err) {
          next(err);
       }
+   };
+
+   private getEmployeesByDepartment = async (req: Request, res: Response, next: express.NextFunction) => {
+      console.log("-----------");
+      try {
+         if (!isString(req.params.name)) {
+            //validation
+            throw new HttpException(400, "Invalid Request");
+         } else {
+            const department = await this.departmentService.getEmployeesByDepartment(req.params.name);
+            if (!department) {
+               //error handling
+               throw new HttpException(404, "Department Not Found !!");
+            } else {
+               res.status(200).send(department);
+            }
+         }
+      } catch (err) {
+         next(err);
+      }
+   };
+   extractValidationErrors = (errorResponse: any): string[] => {
+      const errorMessages = errorResponse.map((error: any) => {
+         if (error.constraints) {
+            return Object.values(error.constraints);
+         } else if (error.children && error.children.length) {
+            return this.extractValidationErrors(error.children);
+         }
+      });
+      return errorMessages.flat();
    };
 }
 

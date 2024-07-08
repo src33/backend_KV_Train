@@ -8,11 +8,12 @@ import { error } from "console";
 import { RequestWithUser } from "../utils/requestWithUser";
 import authorize from "../middleware/authorize.middleware";
 import { UpdateEmployeeDto } from "../dto/update.dto";
+import DepartmentService from "../service/department.service";
 
 class EmployeeController {
    public router: express.Router;
 
-   constructor(private employeeService: EmployeeService) {
+   constructor(private employeeService: EmployeeService, private departmentService: DepartmentService) {
       this.router = express.Router();
       this.router.post("/login", this.login);
       this.router.get("/", this.getAllEmployees);
@@ -72,6 +73,13 @@ class EmployeeController {
                const formattedErrors = await this.extractValidationErrors(errors);
                throw new HttpException(400, JSON.stringify(formattedErrors));
             }
+            console.log("----------------");
+            // console.log(employee_dto.department.name);
+            const department = await this.departmentService.getDepartmentByName(employee_dto.department.name);
+            if (!department) {
+               console.log("----------------");
+               throw new HttpException(404, "Department Not Found");
+            }
             const new_employee = await this.employeeService.createEmployee(
                employee_dto.email,
                employee_dto.name,
@@ -79,7 +87,7 @@ class EmployeeController {
                employee_dto.address,
                employee_dto.password,
                employee_dto.role,
-               employee_dto.department_id
+               department
             );
             res.status(201).send(new_employee);
          }
@@ -103,6 +111,12 @@ class EmployeeController {
                const formattedErrors = await this.extractValidationErrors(errors);
                throw new HttpException(400, JSON.stringify(formattedErrors));
             }
+            console.log("---------");
+            const department = await this.departmentService.getDepartmentByName(employee_dto.department.name);
+            if (!department) {
+               console.log("----------------");
+               throw new HttpException(404, "Department Not Found");
+            }
             const updated_employee = await this.employeeService.updateEmployee(
                Number(employee_id),
                employee_dto.email,
@@ -111,7 +125,7 @@ class EmployeeController {
                employee_dto.address,
                // employee_dto.password,
                employee_dto.role,
-               employee_dto.department_id
+               department
             );
             res.status(201).send(updated_employee);
          }
@@ -127,7 +141,10 @@ class EmployeeController {
             const error = new HttpException(404, "Invalid Request"); //validation
             throw error;
          } else {
-            const partial_updated_employee = await this.employeeService.partialUpdateEmployee(Number(employee_id), req.body);
+            const partial_updated_employee = await this.employeeService.partialUpdateEmployee(
+               Number(employee_id),
+               req.body
+            );
             res.status(201).send(partial_updated_employee);
          }
       } catch (err) {
@@ -137,26 +154,30 @@ class EmployeeController {
    private deleteEmployee = async (req: RequestWithUser, res: express.Response, next: express.NextFunction) => {
       try {
          //Error handling
-         const employee_id = req.params.id;
-         if (!Number(employee_id)) {
-            const error = new HttpException(404, "Invalid Request"); //validation
-            throw error;
+         if (req.role != "HR") {
+            console.log("if");
+            throw new HttpException(403, "Not Authorized");
          } else {
-            const employeeWithId = await this.employeeService.getEmployeeById(Number(employee_id));
-            if (!employeeWithId) {
-               // console.log("entered IF");
-               const error = new HttpException(404, "Employee Not Found");
+            const employee_id = req.params.id;
+            if (!Number(employee_id)) {
+               const error = new HttpException(404, "Invalid Request"); //validation
                throw error;
             } else {
-               await this.employeeService.softRemove(employeeWithId);
-               res.status(200).send(employeeWithId);
+               const employeeWithId = await this.employeeService.getEmployeeById(Number(employee_id));
+               if (!employeeWithId) {
+                  // console.log("entered IF");
+                  const error = new HttpException(404, "Employee Not Found");
+                  throw error;
+               } else {
+                  await this.employeeService.softRemove(employeeWithId);
+                  res.status(200).send(employeeWithId);
+               }
             }
          }
       } catch (err) {
          next(err);
       }
    };
-
    extractValidationErrors = (errorResponse: any): string[] => {
       const errorMessages = errorResponse.map((error: any) => {
          if (error.constraints) {

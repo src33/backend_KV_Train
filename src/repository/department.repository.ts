@@ -13,6 +13,12 @@ class DepartmentRepository {
          where: filter,
       });
    };
+   findEmployeesBy = async (filter: Partial<Department>): Promise<Department | null> => {
+      return this.departmentRepository.findOne({
+         where: filter,
+         relations: ["employee"],
+      });
+   };
    save = async (department: Department): Promise<Department> => {
       return this.departmentRepository.save(department);
    };
@@ -20,6 +26,7 @@ class DepartmentRepository {
       await this.departmentRepository.softDelete(id);
    };
    softRemove = async (delete_department: Department): Promise<void> => {
+      console.log("------repoooo---");
       await this.departmentRepository.softRemove(delete_department);
    };
 }

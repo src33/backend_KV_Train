@@ -10,6 +10,7 @@ import { Role } from "../utils/role.enum";
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 import { CreateDepartmentDto } from "../dto/department.dto";
+import Department from "../entity/department.entity";
 
 class EmployeeService {
    constructor(private employeeRepository: EmployeeRepository) {
@@ -46,7 +47,7 @@ class EmployeeService {
       address: CreateAddressDto,
       password: string,
       role: Role,
-      department_id: number
+      department: Department
    ) => {
       const new_employee = new Employee();
       new_employee.email = email;
@@ -54,12 +55,14 @@ class EmployeeService {
       new_employee.age = age;
       new_employee.password = password ? await bcrypt.hash(password, 10) : "";
       new_employee.role = role;
-      new_employee.department = department_id;
+
+      console.log("---------------");
 
       const new_employee_address = new Address();
       new_employee_address.line1 = address.line1;
       new_employee_address.pincode = address.pincode;
 
+      new_employee.department = department;
       new_employee.address = new_employee_address;
       return this.employeeRepository.save(new_employee);
    };
@@ -71,7 +74,7 @@ class EmployeeService {
       address: CreateAddressDto,
       // password: string,
       role: Role,
-      department_id: number
+      department: Department
    ) => {
       const employee = await this.employeeRepository.findOneBy({ id: id });
       employee.email = email;
@@ -79,7 +82,7 @@ class EmployeeService {
       employee.age = age;
       // employee.password = password;
       employee.role = role;
-      employee.department = department_id;
+      employee.department = department;
       // const employee_address = new Address();
       employee.address.line1 = address.line1;
       employee.address.pincode = address.pincode;
